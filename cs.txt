@@ -1,0 +1,95 @@
+﻿Squid
+1. Install squid
+2. Open vi /etc/squid/squid.conf
+3. Search http_access and add
+acl localnet src 192.168.7.237
+acl blocksite dstdomain "/etc/squid/blocksite"
+http_access deny blocksite
+http_access allow localnet
+4. Then search http_port and copy the port
+5. Quit
+6. Open vi /etc/squid/blocksite and add the site link
+7. Quit
+8. Restart squid server by : systemctl restart squid
+9. Now turn on manual proxy
+________________
+
+
+Open SSL
+Steps
+1)Create 2 dir Alice and Bob
+2) In dir Alice
+ 2.1)openssl rand -out symm.key 16
+ 2.2)Create a plain.txt file , Add Dummy Data
+ 2.3)Encrypt the Plain.txt to cipher.txt
+        openssl enc -aes-128-cbc -e -in plain.txt -out cipher.txt -kfile symm.key
+ 2.4) Create a private key ( private , public key pair)
+        openssl genrsa -out alicepriv.key -aes256 2048        
+ 2.5) Extract public key
+        openssl rsa -in alicepriv.key -out alicepub.key -pubout
+ 2.6) Check Public key
+        openssl rsa -in alicepub.key -text -noout -pubin
+
+
+3) In BOB(Repeat steps 2.4,2.5)
+
+
+ 2.7) encrypt the symm.key 
+        openssl rsautl -in symm.key -out symm.enc.key -inkey bobpub.key -encrypt -pubin
+        Copy symm.enc.key and cipher.txt to bob
+                
+3.1) decrypt the symm.key using bobpriv.key 
+        openssl rsautl -in symm.enc.key -out symm.dec.key -inkey bobpriv.key -decrypt
+3.2) decrypt the cipher.txt using symm.dec.txt
+        openssl enc -d -aes-128-cbc -in cipher.txt -out cipher.dec.txt -kfile symm.dec.key
+
+
+
+
+Integrity check
+1)create a hash
+        openssl dgst -sha512 -binary -out hash.txt plain.txt
+2) create a hash using Mac
+        openssl dgst -sha512 -binary -hmac nopass -out hash.mac plain.txt
+
+
+Digital Signature
+ openssl dgst -sha512 -sign alicepriv.key -out hash.sign plain.txt
+ openssl verify -sha512 -verify alicepub.key plain.txt
+
+
+openssl dgst -sha512 -verify alicepub.key -signature hash.sign plain.txt
+________________
+OpenSSL ca
+Steps
+1. mkdir certs crl newcerts private
+chmod 700 private
+touch index.txt
+echo 1000 > serial
+2. Setting up Root CA
+openssl genrsa -aes256 -out private/rootCA.key 4069
+chmod 400 private/rootCA.key
+openssl req -config openssl.cnf -key private/rootCA.key -new -x509 -days 7000 -sha256 -extensions v3_ca -out rootCA.cert
+        Country Name (2 letter code) [IN]:IN
+State or Province Name [Goa]:Goa
+Locality Name []:Taleigao
+Organization Name [Goa University]:
+Organizational Unit Name []:GBS
+Common Name []:GBS Root Certifying Authority
+Email Address []:
+chmod 444 rootCA.cert
+mv rootCA.cert certs
+openssl x509 -noout -text -in certs/rootCA.cert
+3. Create the certificate for the intermediate CA
+   1. Create intermediate directory
+                mkdir certs crl newcerts private
+chmod 700 private
+touch index.txt
+echo 1000 > serial
+________________
+   2. Ip tables
+1. iptables-save > firewallRulesBackup
+        iptables-restore firewallRulesBackup
+
+
+2.
